@@ -1,69 +1,73 @@
-const fs = require('fs')
+// const fs = require("fs");
+import * as fs from "fs"
 
-interface ICountry {
-	name: string,
-	population: number,
-	area: number,
-	density: number
+const countries: string = fs.readFileSync("countries.txt", {
+   encoding: "utf8",
+   flag: "r",
+});
+const countriesArray: string[] = countries.split(/\r?\n/);
+countriesArray.pop();
+const splittedCountries: string[][] = countriesArray.map((country: string) => country.split(" "));
+
+const joinedCountryNames: (string | number)[][] = splittedCountries
+   .slice(1)
+   .map((country) => {
+      let regex = /[a-zA-Z]/;
+
+      const name: string = country.reduce((a, b) =>
+         regex.test(b) ? a.concat(` ${b}`) : a
+      );
+
+      let populationString: string = '';
+      for (const e of country) {
+         if (!regex.test(e)) {
+            populationString = e;
+            break;
+         }
+      }
+      const population = toNumber(populationString);
+
+      const areaData: string[] = country.filter(
+         (item) => !name.includes(item) && item !== populationString
+      );
+      const area = (data: string[]) => {
+         if (data.length > 1) {
+            data.sort((a: any, b: any) => a - b);
+            return toNumber(data[data.length - 1]);
+         } else return toNumber(data[0]);
+      };
+
+      const density: number = Number((population / area(areaData)).toFixed(2));
+
+      return [
+         name,
+         population,
+         area(areaData),
+         density !== Infinity ? density : "Missing area data",
+      ];
+   });
+
+const sortedCountriesByDensity: (string | number)[][] = joinedCountryNames.sort(
+   (a: any, b: any) => b[b.length - 1] - a[a.length - 1]
+);
+
+function toNumber(data: string) {
+   if (data === undefined) {
+      return 0;
+   } else {
+      const num = data.replace(/,/g, "");
+      return Number(num);
+   }
 }
-let results: ICountry[] = []; 
 
-const countries = fs.readFileSync('./countries.txt').toString()
-const countriesArray = countries.split(/\r?\n/)
-const splittedCountries = countriesArray.map((country :string) => country.split(' '))
+let titles: string | undefined = countriesArray.shift();
+titles += " Density";
+const dataToCSV: string =
+   titles +
+   "\n" +
+   "\n" +
+   sortedCountriesByDensity
+      .map((country) => country.join(" - ") + "," + "\n")
+      .join("\n");
 
-const joinedCountryNames = splittedCountries.slice(1, -1).map((country :[])=> {
-	
-	const regex = /[a-zA-Z]/g;
-	
-	// const name :string = ''
-	// const population :number = 0
-	// const area :number = 0
-
-	let newCountry :ICountry = {
-		name: '',
-		population: 0,
-		area: 0,
-		density: 0
-	}
-	// const checkLetters = (param :string) => {
-	// 	const regex = /[a-zA-Z]/g
-	// 	// if (regex.test(param)) {
-	// 	// 	return Number(country[country.length - 1].replace(/,/g, ''))
-	// 	// } else return Number(param.replace(/,/g, ''))
-	// 	if (regex.test(param)) {
-	// 		return true
-	// 	}
-	// 	return false
-	// }
-	
-	country.map((item: string) => (
-		regex.test(item) ? newCountry.name.concat(item) : null),	
-	);
-	//checkLetters(item) ? name.concat(item) : null)
-// 	const population = checkLetters(country[country.length - 2])
-// 	const area = checkLetters(country[country.length - 1]) !== checkLetters(country[country.length - 2]) ? checkLetters(country[country.length - 1]) : 0
-
-// 		if (country.length > 3) {
-// 			return [country.slice(0, -2).join(' '), population, area] 
-// 		} else return (
-// 			[country[0], population, area]
-// 		)
-	//console.log(results)
-	return results.push(newCountry)
-})
-
-// const populationDensity = joinedCountryNames.slice(0, -1).map(country => {
-// 	if (country[country.length - 1] === 0){
-// 		return country = [country[0], ': Wrong area data']
-// 	} 
-// 	const density = country[country.length - 1] !== 0 ? country[country.length - 2] / country[country.length - 1] : null
-// 	country.push(density)
-	
-// 	return country
-// })
-
-// populationDensity.sort((a, b) => b[b.length - 1] - a[a.length-1]);
-
-//console.dir(splittedCountries, { maxArrayLength: null });
-console.log(results);
+fs.writeFileSync("countries.csv", dataToCSV);
