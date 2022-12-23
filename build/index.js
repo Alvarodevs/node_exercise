@@ -48,7 +48,7 @@ const joinedCountryNames = splittedCountries
     const areaData = country.filter((item) => !name.includes(item) && item !== populationString);
     const area = (data) => {
         if (data.length > 1) {
-            data.sort((a, b) => a - b);
+            data.sort((a, b) => parseInt(a) - parseInt(b));
             return toNumber(data[data.length - 1]);
         }
         else

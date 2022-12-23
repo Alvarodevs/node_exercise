@@ -32,7 +32,7 @@ const joinedCountryNames: (string | number)[][] = splittedCountries
       );
       const area = (data: string[]) => {
          if (data.length > 1) {
-            data.sort((a: any, b: any) => a - b);
+            data.sort((a: string, b: string) => parseInt(a) - parseInt(b));
             return toNumber(data[data.length - 1]);
          } else return toNumber(data[0]);
       };
